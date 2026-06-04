@@ -15,7 +15,7 @@ def divide(x, y):
 def main():
     print("--- Simple Python Calculator ---")
     
-    # Get the numbers from the user with basic input validation
+    
     try:
         num1 = float(input("Enter the first number: "))
         num2 = float(input("Enter the second number: "))
@@ -23,7 +23,7 @@ def main():
         print("Invalid input. Please enter valid numbers.")
         return
 
-    # Display operation choices
+   
     print("\nAvailable Operations:")
     print("+ : Addition")
     print("- : Subtraction")
@@ -32,7 +32,7 @@ def main():
     
     choice = input("\nSelect an operation (+, -, *, /): ").strip()
     
-    # Perform calculation based on the operation chosen
+    
     if choice == '+':
         result = add(num1, num2)
         print(f"\nResult: {num1} + {num2} = {result}")
