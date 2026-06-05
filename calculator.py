@@ -1,52 +1,48 @@
-def add(x, y):
-    return x + y
+from flask import Flask, render_template, request, jsonify
 
-def subtract(x, y):
-    return x - y
+app = Flask(__name__)
 
-def multiply(x, y):
-    return x * y
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-def divide(x, y):
-    if y == 0:
-        return "Error: Cannot divide by zero!"
-    return x / y
-
-def main():
-    print("--- Simple Python Calculator ---")
-    
-    
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    data = request.get_json()
     try:
-        num1 = float(input("Enter the first number: "))
-        num2 = float(input("Enter the second number: "))
-    except ValueError:
-        print("Invalid input. Please enter valid numbers.")
-        return
+        num1 = float(data['num1'])
+        num2 = float(data['num2'])
+        operation = data['operation']
 
-   
-    print("\nAvailable Operations:")
-    print("+ : Addition")
-    print("- : Subtraction")
-    print("* : Multiplication")
-    print("/ : Division")
-    
-    choice = input("\nSelect an operation (+, -, *, /): ").strip()
-    
-    
-    if choice == '+':
-        result = add(num1, num2)
-        print(f"\nResult: {num1} + {num2} = {result}")
-    elif choice == '-':
-        result = subtract(num1, num2)
-        print(f"\nResult: {num1} - {num2} = {result}")
-    elif choice == '*':
-        result = multiply(num1, num2)
-        print(f"\nResult: {num1} * {num2} = {result}")
-    elif choice == '/':
-        result = divide(num1, num2)
-        print(f"\nResult: {result}")
-    else:
-        print("\nInvalid operation symbol selected.")
+        if operation == 'add':
+            result = num1 + num2
+            symbol = '+'
+        elif operation == 'subtract':
+            result = num1 - num2
+            symbol = '−'
+        elif operation == 'multiply':
+            result = num1 * num2
+            symbol = '×'
+        elif operation == 'divide':
+            if num2 == 0:
+                return jsonify({'error': 'Cannot divide by zero'}), 400
+            result = num1 / num2
+            symbol = '÷'
+        else:
+            return jsonify({'error': 'Invalid operation'}), 400
 
-if __name__ == "__main__":
-    main()
+        if result == int(result):
+            result_str = str(int(result))
+        else:
+            result_str = f"{result:.6f}".rstrip('0')
+
+        return jsonify({
+            'result': result_str,
+            'expression': f"{num1:g} {symbol} {num2:g} = {result_str}"
+        })
+
+    except (ValueError, KeyError):
+        return jsonify({'error': 'Invalid input'}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
