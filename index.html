@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0b0c0f; --surface: #13151a; --card: #1a1d24;
+      --border: #2a2d36; --accent: #e8ff47; --text: #f0f2f7;
+      --muted: #6b7280; --error: #ff6b6b; --radius: 16px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Syne', sans-serif; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+      background-size: 48px 48px; pointer-events: none;
+    }
+    body::after {
+      content: ''; position: fixed; top: -200px; left: 50%;
+      transform: translateX(-50%); width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(232,255,71,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .wrapper { width: 100%; max-width: 480px; animation: fadeUp 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .header-dot { width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent); }
+    .header h1 { font-size:13px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(232,255,71,0.4), transparent);
+    }
+    .display {
+      background:var(--surface); border:1px solid var(--border); border-radius:12px;
+      padding:20px 24px; margin-bottom:28px; min-height:88px;
+      display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; gap:6px;
+    }
+    .expression { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); min-height:16px; }
+    .result-display { font-family:'DM Mono',monospace; font-size:32px; font-weight:500; color:var(--text); word-break:break-all; }
+    .result-display.accent { color:var(--accent); }
+    .result-display.error  { color:var(--error); font-size:18px; }
+    .inputs { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+    .input-group { display:flex; flex-direction:column; gap:6px; }
+    .input-group label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+    .input-group input {
+      background:var(--surface); border:1px solid var(--border); border-radius:10px;
+      padding:12px 16px; color:var(--text); font-family:'DM Mono',monospace;
+      font-size:16px; width:100%; outline:none; transition:border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-group input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(232,255,71,0.1); }
+    .input-group input::placeholder { color:var(--muted); }
+    .input-group input::-webkit-outer-spin-button,
+    .input-group input::-webkit-inner-spin-button { -webkit-appearance:none; }
+    .input-group input[type=number] { -moz-appearance:textfield; }
+    .ops-label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .ops-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+    .op-btn {
+      background:var(--surface); border:1px solid var(--border); border-radius:10px;
+      padding:14px 8px; color:var(--text); font-family:'Syne',sans-serif;
+      font-size:20px; font-weight:600; cursor:pointer; transition:all 0.15s;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .op-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(232,255,71,0.05); }
+    .op-btn.active { background:var(--accent); border-color:var(--accent); color:#0b0c0f; box-shadow:0 0 20px rgba(232,255,71,0.3); }
+    .calc-btn {
+      width:100%; padding:16px; background:var(--accent); border:none; border-radius:12px;
+      color:#0b0c0f; font-family:'Syne',sans-serif; font-size:15px; font-weight:700;
+      letter-spacing:0.05em; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+    }
+    .calc-btn:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(232,255,71,0.3); }
+    .calc-btn:active { transform:translateY(0); }
+    .calc-btn::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%); }
+    .history { margin-top:20px; border-top:1px solid var(--border); padding-top:20px; }
+    .history-label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+    .clear-history { background:none; border:none; color:var(--muted); font-family:'Syne',sans-serif; font-size:10px; cursor:pointer; letter-spacing:0.05em; text-transform:uppercase; transition:color 0.2s; }
+    .clear-history:hover { color:var(--error); }
+    .history-list { display:flex; flex-direction:column; gap:6px; max-height:140px; overflow-y:auto; }
+    .history-list::-webkit-scrollbar { width:4px; }
+    .history-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+    .history-item { font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); padding:6px 10px; background:var(--surface); border-radius:6px; animation:slideIn 0.2s ease both; }
+    .history-empty { font-family:'DM Mono',monospace; font-size:12px; color:var(--border); text-align:center; padding:12px; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-8px);} to{opacity:1;transform:translateX(0);} }
+    .ripple { position:absolute; border-radius:50%; background:rgba(232,255,71,0.3); transform:scale(0); animation:ripple 0.5s linear; pointer-events:none; }
+    @keyframes ripple { to{transform:scale(4);opacity:0;} }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header-dot"></div>
+      <h1>Calculator &mdash; v1.0</h1>
+    </div>
+    <div class="card">
+      <div class="display">
+        <div class="expression" id="expression">Enter two numbers and select an operation</div>
+        <div class="result-display" id="result">—</div>
+      </div>
+      <div class="inputs">
+        <div class="input-group">
+          <label>First Number</label>
+          <input type="number" id="num1" placeholder="0" step="any"/>
+        </div>
+        <div class="input-group">
+          <label>Second Number</label>
+          <input type="number" id="num2" placeholder="0" step="any"/>
+        </div>
+      </div>
+      <div class="ops-label">Operation</div>
+      <div class="ops-grid">
+        <button class="op-btn" data-op="add">+</button>
+        <button class="op-btn" data-op="subtract">−</button>
+        <button class="op-btn" data-op="multiply">×</button>
+        <button class="op-btn" data-op="divide">÷</button>
+      </div>
+      <button class="calc-btn" id="calcBtn" onclick="calculate()">Calculate</button>
+      <div class="history">
+        <div class="history-label">
+          History
+          <button class="clear-history" onclick="clearHistory()">Clear</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">No calculations yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let selectedOp = null;
+    const history = [];
+    document.querySelectorAll('.op-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedOp = btn.dataset.op;
+      });
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+    async function calculate() {
+      const num1 = document.getElementById('num1').value;
+      const num2 = document.getElementById('num2').value;
+      const resultEl = document.getElementById('result');
+      const exprEl = document.getElementById('expression');
+      if (num1 === '' || num2 === '') { showError('Please enter both numbers'); return; }
+      if (!selectedOp) { showError('Please select an operation'); return; }
+      const btn = document.getElementById('calcBtn');
+      const ripple = document.createElement('span');
+      ripple.classList.add('ripple');
+      ripple.style.width = ripple.style.height = '100px';
+      ripple.style.left = '50%'; ripple.style.top = '50%';
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+      try {
+        const res = await fetch('/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ num1, num2, operation: selectedOp })
+        });
+        const data = await res.json();
+        if (data.error) { showError(data.error); }
+        else {
+          resultEl.textContent = data.result;
+          resultEl.className = 'result-display accent';
+          exprEl.textContent = data.expression;
+          addHistory(data.expression);
+        }
+      } catch { showError('Something went wrong'); }
+    }
+    function showError(msg) {
+      document.getElementById('result').textContent = msg;
+      document.getElementById('result').className = 'result-display error';
+      document.getElementById('expression').textContent = '';
+    }
+    function addHistory(expr) {
+      history.unshift(expr);
+      if (history.length > 10) history.pop();
+      renderHistory();
+    }
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      list.innerHTML = history.length === 0
+        ? '<div class="history-empty">No calculations yet</div>'
+        : history.map(h => `<div class="history-item">${h}</div>`).join('');
+    }
+    function clearHistory() { history.length = 0; renderHistory(); }
+  </script>
+</body>
+</html>
