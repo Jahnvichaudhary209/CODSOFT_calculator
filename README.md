@@ -25,5 +25,5 @@ A lightweight, terminal-based calculator application written in Python. This uti
    Navigate into the directory where you saved your file:
    ```bash
    cd path/to/your/calculator-folder
-Build Command: pip install -r requirements.txt
+Build Command: pip install -r requirements.txt  ,
 Start Command: gunicorn app:app
