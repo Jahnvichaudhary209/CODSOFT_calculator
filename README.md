@@ -1,6 +1,6 @@
 # Simple Python Calculator
 
-A lightweight, terminal-based calculator application written in Python. This utility performs fundamental arithmetic operations while validating user inputs to handle execution errors smoothly.
+A lightweight, terminal-based calculator application written in Python. This utility performs fundamental arithmetic operations while validating user inputs to handle execution errors smoothly. live deployed at https://flourishing-boba-07e90a.netlify.app
 
 ## 🚀 Features
 
